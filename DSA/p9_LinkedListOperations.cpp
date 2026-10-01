@@ -8,40 +8,41 @@
 // (f) Delete a node after specified position.
 
 #include <iostream>
+#include <memory>
 #include <print>
 
 struct Node
 {
     int data;
-    Node *next;
+    std::unique_ptr<Node> next;
 };
 
 class List
 {
-    Node *head = nullptr;
+    std::unique_ptr<Node> head;
 
 public:
     void InsertFront(int value)
     {
-        head = new Node{value, head};
+        head = std::make_unique<Node>(value, std::move(head));
     }
 
     void InsertEnd(int value)
     {
-        Node *node = new Node{value, nullptr};
+        auto node = std::make_unique<Node>(value);
 
         if (!head)
         {
-            head = node;
+            head = std::move(node);
             return;
         }
 
-        Node *temp = head;
+        Node *temp = head.get();
 
         while (temp->next)
-            temp = temp->next;
+            temp = temp->next.get();
 
-        temp->next = node;
+        temp->next = std::move(node);
     }
 
     void InsertSorted(int value)
@@ -52,12 +53,13 @@ public:
             return;
         }
 
-        Node *temp = head;
+        Node *temp = head.get();
 
         while (temp->next && temp->next->data < value)
-            temp = temp->next;
+            temp = temp->next.get();
 
-        temp->next = new Node{value, temp->next};
+        auto node = std::make_unique<Node>(value, std::move(temp->next));
+        temp->next = std::move(node);
     }
 
     void DeleteFront()
@@ -68,9 +70,7 @@ public:
             return;
         }
 
-        Node *temp = head;
-        head = head->next;
-        delete temp;
+        head = std::move(head->next);
     }
 
     void DeleteValue(int value)
@@ -87,10 +87,10 @@ public:
             return;
         }
 
-        Node *temp = head;
+        Node *temp = head.get();
 
         while (temp->next && temp->next->data != value)
-            temp = temp->next;
+            temp = temp->next.get();
 
         if (!temp->next)
         {
@@ -98,17 +98,15 @@ public:
             return;
         }
 
-        Node *del = temp->next;
-        temp->next = del->next;
-        delete del;
+        temp->next = std::move(temp->next->next);
     }
 
     void DeleteAfter(int pos)
     {
-        Node *temp = head;
+        Node *temp = head.get();
 
         for (int i = 1; temp && i < pos; ++i)
-            temp = temp->next;
+            temp = temp->next.get();
 
         if (!temp || !temp->next)
         {
@@ -116,9 +114,7 @@ public:
             return;
         }
 
-        Node *del = temp->next;
-        temp->next = del->next;
-        delete del;
+        temp->next = std::move(temp->next->next);
     }
 
     void Display()
@@ -129,7 +125,7 @@ public:
             return;
         }
 
-        for (Node *temp = head; temp; temp = temp->next)
+        for (Node *temp = head.get(); temp; temp = temp->next.get())
             std::print("{} ", temp->data);
 
         std::println();
