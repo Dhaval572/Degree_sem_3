@@ -52,6 +52,7 @@ class Stack
         {
             std::print("{} ", node->data);
         }
+        
         std::println();
     }
 };
